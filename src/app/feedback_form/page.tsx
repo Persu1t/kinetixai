@@ -40,7 +40,6 @@ const Page = () => {
       );
 
       setMessageSent(true);
-      console.log("Email sent:", response);
 
       // reset form
       setName("");

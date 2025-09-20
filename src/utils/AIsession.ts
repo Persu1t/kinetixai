@@ -9,7 +9,6 @@ interface AISession {
 
 export const createAISession = async (getRepHistroy: () => any[]): Promise<AISession> => {
     const response = await axios.get('/api');
-    console.log("API response:", response.data);
     const tempkey = response.data.tempApiKey;
     const agent = createTrainer(getRepHistroy);
     const session = new RealtimeSession(agent, {

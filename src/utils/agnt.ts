@@ -8,7 +8,6 @@ export const createTrainer = (getRepHistory: () => { rep: number; minAngle: numb
     parameters: z.object({}), // no parameters
     execute: async () => {
       const data = getRepHistory();
-      console.log("getRepHistory called", data);
       return data;
     }
   })

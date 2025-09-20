@@ -47,7 +47,6 @@ const Page = () => {
   const draw = () => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx || !videoRef.current) {
-      console.log("no ctx");
       return
     };
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -133,14 +132,12 @@ const Page = () => {
     // --- Initialize nose baseline if not set ---
     if (startNoseYRef.current === 0) {
       startNoseYRef.current = noseY;
-      console.log(noseY)
     }
 
     // Nose displacement (normalized to torso length)
     const noseDisplacement = (noseY - startNoseYRef.current) / torsoLength;
 
     const smoothNoseDisplacement = smooth(smoothedNoseDispRef.current || noseDisplacement, noseDisplacement);
-    console.log("smoothNoseDisplacement:", smoothNoseDisplacement);
     smoothedNoseDispRef.current = smoothNoseDisplacement;
 
 
@@ -161,13 +158,6 @@ const Page = () => {
         pushUpStageRef.current = "up";
         pushUpCountRef.current += 1;
         const minElbowAngle = minElbowAngleRef.current;
-        console.log("repData:", {
-          rep: pushUpCountRef.current,
-          minElbowAngle,
-          bodySag,
-          avgElbow,
-          noseDisplacement: smoothNoseDisplacement,
-        });
 
         setRepHistory(prev => [
           ...prev,
@@ -254,8 +244,6 @@ const Page = () => {
       setAiLoading(true);
       try {
         const aiSession = await createAISession(() => repHistoryRef.current);
-        console.log(aiSession.on);
-        console.log("AI session:", aiSession);
         aiSessionRef.current = aiSession;
       } finally {
         setAiLoading(false);

@@ -119,15 +119,6 @@ const SquatPage = () => {
         squatCountRef.current += 1;
         lastRepTimeRef.current = now;
         const minKneeAngle = minKneeAngleRef.current;
-
-        console.log("Rep Data", {
-          rep: squatCountRef.current,
-          kneeAngle: smoothedKnee,
-          minKneeAngle,
-          torsoAngle: smoothedTorso,
-          hipDisp: smoothedHip,
-        })
-
         repHistoryRef.current.push({
           rep: squatCountRef.current,
           kneeAngle: smoothedKnee,
@@ -217,8 +208,6 @@ const SquatPage = () => {
       setAiLoading(true);
       try {
         const aiSession = await createAISession(() => repHistoryRef.current);
-        console.log(aiSession.on);
-        console.log("AI session:", aiSession);
         aiSessionRef.current = aiSession;
 
         

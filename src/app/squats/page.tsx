@@ -31,6 +31,7 @@ const SquatPage = () => {
   const [torsoAngle, setTorsoAngle] = useState(0);
   const [hipDisplacement, setHipDisplacement] = useState(0);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("environment");
 
   const [session, setSession] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
@@ -44,19 +45,6 @@ const SquatPage = () => {
 
   // --- Smooth helper ---
   const smooth = (prev: number, cur: number) => prev * 0.7 + cur * 0.3;
-
-    const toggleSpeaker = async () => {
-    if (!audioRef.current) return;
-
-    try {
-      const targetSinkId = isSpeakerOn ? '' : 'default'; // The 'default' is the key
-      await audioRef.current.setSinkId(targetSinkId);
-      setIsSpeakerOn(!isSpeakerOn);
-      console.log(`Audio output switched to: ${targetSinkId === 'default' ? 'Loudspeaker' : 'Earpiece'}`);
-    } catch (err) {
-      console.error('Failed to set audio output device:', err);
-    }
-  };
 
   const draw = () => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -95,7 +83,7 @@ const SquatPage = () => {
 
     const torso = calculateAngle(lm[11], hipMid, ankleMid);
     const torsoLength = Math.abs(shoulderMid.y - ankleMid.y);
-    
+
 
     // hip vertical displacement
     const hipDisp = Math.abs((lm[23].y - lm[27].y) / torsoLength);
@@ -163,6 +151,23 @@ const SquatPage = () => {
   }, []);
 
   useEffect(() => {
+    const awakeAI = async () => {
+      setAiLoading(true);
+      try {
+        const aiSession = await createAISession(() => repHistoryRef.current);
+        aiSessionRef.current = aiSession;
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    awakeAI();
+
+    return () => {
+      aiSessionRef.current?.close();
+    }
+  }, [])
+  useEffect(() => {
     sessionRef.current = session;
   }, [session]);
   useEffect(() => {
@@ -171,22 +176,22 @@ const SquatPage = () => {
 
   // --- Init camera + Mediapipe ---
   useEffect(() => {
-
-
     let mounted = true;
 
     const init = async () => {
       poseRef.current = await initMediapipe();
 
       if (videoRef.current) {
-        const stream = await navigator.mediaDevices.getUserMedia({video: { facingMode: "environment" }});
-        await navigator.mediaDevices.enumerateDevices();
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacing }});
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        console.log(devices)
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();
           rafIdRef.current = requestAnimationFrame(detectPose);
         };
       }
+
     };
 
     const detectPose = async () => {
@@ -215,17 +220,9 @@ const SquatPage = () => {
       }
     };
 
-    const awakeAI = async () => {
-      setAiLoading(true);
-      try {
-        const aiSession = await createAISession(() => repHistoryRef.current);
-        aiSessionRef.current = aiSession;
-      } finally {
-        setAiLoading(false);
-      }
-    };
+
     init();
-    awakeAI();
+
     return () => {
       mounted = false;
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
@@ -233,15 +230,14 @@ const SquatPage = () => {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach((track) => track.stop()); // ✅ Stop camera stream on unmount
       }
-      aiSessionRef.current?.close();
     };
-  }, []);
+  }, [cameraFacing]);
 
   return (
     <>
       <div className="relative w-full max-w-screen-md mx-auto">
         <video ref={videoRef} className="w-full h-auto rounded-lg" playsInline />
-        <audio ref={audioRef} autoPlay className="hidden"/>
+        <audio ref={audioRef} autoPlay playsInline style={{ display: "none" }} />
         <canvas
           ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full rounded-lg"
@@ -269,30 +265,37 @@ const SquatPage = () => {
         )}
       </div>
 
-      <div className="flex gap-2 mt-4">
-
+      <div className="flex flex-wrap gap-2 mt-4 justify-center">
         <Button
           onClick={() => setSession(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded"
+          className="flex-1 min-w-[120px] px-3 py-2 bg-green-600 text-white rounded text-sm sm:text-base"
           disabled={session}
         >
           Start Session
         </Button>
         <Button
           onClick={() => setSession(false)}
-          className="px-4 py-2 bg-red-600 text-white rounded"
+          className="flex-1 min-w-[120px] px-3 py-2 bg-red-600 text-white rounded text-sm sm:text-base"
           disabled={!session}
         >
           Stop Session
         </Button>
         <Button
           onClick={() => setShowSkeleton((prev) => !prev)}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="flex-1 min-w-[120px] px-3 py-2 bg-blue-600 text-white rounded text-sm sm:text-base"
           disabled={session}
         >
           {showSkeleton ? "Hide Skeleton" : "Show Skeleton"}
         </Button>
-        {/* <Button onClick={toggleSpeaker}>{isSpeakerOn ? 'Switch to Earpiece' : 'Switch to Loudspeaker'}</Button> */}
+        <Button
+          onClick={() =>
+            setCameraFacing((prev) => (prev === "user" ? "environment" : "user"))
+          }
+          className="flex-1 min-w-[120px] px-3 py-2 bg-purple-600 text-white rounded text-sm sm:text-base"
+          disabled={session}
+        >
+          Switch Camera
+        </Button>
       </div>
     </>
   );

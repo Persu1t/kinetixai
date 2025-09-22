@@ -5,7 +5,6 @@ import { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { calculateAngle, drawLine, drawPoint, midpoint } from "@/utils/angleCalc";
 import { createAISession } from "../../utils/AIsession";
 import { Button } from "@/components/ui/button";
-import { usePathname } from "next/navigation";
 
 const Page = () => {
   const poseRef = useRef<PoseLandmarker | null>(null);
@@ -30,6 +29,7 @@ const Page = () => {
   const showSkeletonRef = useRef(showSkeleton);
 
   const [aiLoading, setAiLoading] = useState(true);
+  const [cameraFacing,setCameraFacing] = useState<"user" | "environment">("environment");
 
   const [pushUpCount, setPushUpCount] = useState(0);
   const [pushUpStage, setPushUpStage] = useState<"up" | "down">("up");
@@ -184,6 +184,25 @@ const Page = () => {
     }
   };
 
+  useEffect(()=>{
+        const awakeAI = async () => {
+      setAiLoading(true);
+      try {
+        const aiSession = await createAISession(() => repHistoryRef.current);
+        aiSessionRef.current = aiSession;
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    awakeAI();
+
+    return ()=>{
+      aiSessionRef.current?.close();
+    }
+
+  },[])
+
   useEffect(() => {
     repHistoryRef.current = repHistrory
   }, [repHistrory])
@@ -205,7 +224,7 @@ const Page = () => {
 
       if (videoRef.current) {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
+          video: { facingMode: cameraFacing },
         });
         await navigator.mediaDevices.enumerateDevices();
         videoRef.current.srcObject = stream;
@@ -242,19 +261,7 @@ const Page = () => {
       }
     };
 
-    const awakeAI = async () => {
-      setAiLoading(true);
-      try {
-        const aiSession = await createAISession(() => repHistoryRef.current);
-        aiSessionRef.current = aiSession;
-      } finally {
-        setAiLoading(false);
-      }
-    };
-
     init();
-
-    awakeAI();
 
 
 
@@ -265,9 +272,8 @@ const Page = () => {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach((track) => track.stop()); // ✅ Stop camera stream on unmount
       }
-      aiSessionRef.current?.close();
     };
-  }, []);
+  }, [cameraFacing]);
 
   return (
     <>
@@ -299,27 +305,36 @@ const Page = () => {
           </div>
         )}
       </div>
-      <div className="flex gap-2 mt-4">
+       <div className="flex flex-wrap gap-2 mt-4 justify-center">
         <Button
           onClick={() => setSession(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded"
+          className="flex-1 min-w-[120px] px-3 py-2 bg-green-600 text-white rounded text-sm sm:text-base"
           disabled={session}
         >
           Start Session
         </Button>
         <Button
           onClick={() => setSession(false)}
-          className="px-4 py-2 bg-red-600 text-white rounded"
+          className="flex-1 min-w-[120px] px-3 py-2 bg-red-600 text-white rounded text-sm sm:text-base"
           disabled={!session}
         >
           Stop Session
         </Button>
         <Button
           onClick={() => setShowSkeleton((prev) => !prev)}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="flex-1 min-w-[120px] px-3 py-2 bg-blue-600 text-white rounded text-sm sm:text-base"
           disabled={session}
         >
           {showSkeleton ? "Hide Skeleton" : "Show Skeleton"}
+        </Button>
+        <Button
+          onClick={() =>
+            setCameraFacing((prev) => (prev === "user" ? "environment" : "user"))
+          }
+          className="flex-1 min-w-[120px] px-3 py-2 bg-purple-600 text-white rounded text-sm sm:text-base"
+          disabled={session}
+        >
+          Switch Camera
         </Button>
       </div>
     </>

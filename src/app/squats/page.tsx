@@ -5,7 +5,6 @@ import { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { calculateAngle, drawLine, drawPoint, midpoint } from "@/utils/angleCalc";
 import { createAISession } from "../../utils/AIsession";
 import { Button } from "@/components/ui/button";
-import { usePathname } from "next/navigation";
 
 const SquatPage = () => {
   const poseRef = useRef<PoseLandmarker | null>(null);
@@ -31,6 +30,7 @@ const SquatPage = () => {
   const [kneeAngle, setKneeAngle] = useState(0);
   const [torsoAngle, setTorsoAngle] = useState(0);
   const [hipDisplacement, setHipDisplacement] = useState(0);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
 
   const [session, setSession] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
@@ -39,13 +39,24 @@ const SquatPage = () => {
 
   const sessionRef = useRef(session);
   const showSkeletonRef = useRef(showSkeleton);
-
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const repHistoryRef = useRef<any[]>([]);
-
-  const pathname = usePathname();
 
   // --- Smooth helper ---
   const smooth = (prev: number, cur: number) => prev * 0.7 + cur * 0.3;
+
+    const toggleSpeaker = async () => {
+    if (!audioRef.current) return;
+
+    try {
+      const targetSinkId = isSpeakerOn ? '' : 'default'; // The 'default' is the key
+      await audioRef.current.setSinkId(targetSinkId);
+      setIsSpeakerOn(!isSpeakerOn);
+      console.log(`Audio output switched to: ${targetSinkId === 'default' ? 'Loudspeaker' : 'Earpiece'}`);
+    } catch (err) {
+      console.error('Failed to set audio output device:', err);
+    }
+  };
 
   const draw = () => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -84,6 +95,7 @@ const SquatPage = () => {
 
     const torso = calculateAngle(lm[11], hipMid, ankleMid);
     const torsoLength = Math.abs(shoulderMid.y - ankleMid.y);
+    
 
     // hip vertical displacement
     const hipDisp = Math.abs((lm[23].y - lm[27].y) / torsoLength);
@@ -167,9 +179,10 @@ const SquatPage = () => {
       poseRef.current = await initMediapipe();
 
       if (videoRef.current) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({video: { facingMode: "environment" }});
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        console.log(devices);
+        console.log(devices);
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();
@@ -209,19 +222,12 @@ const SquatPage = () => {
       try {
         const aiSession = await createAISession(() => repHistoryRef.current);
         aiSessionRef.current = aiSession;
-
-        
       } finally {
         setAiLoading(false);
       }
     };
-
     init();
-
     awakeAI();
-
-
-
     return () => {
       mounted = false;
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
@@ -237,6 +243,7 @@ const SquatPage = () => {
     <>
       <div className="relative w-full max-w-screen-md mx-auto">
         <video ref={videoRef} className="w-full h-auto rounded-lg" playsInline />
+        <audio ref={audioRef} autoPlay className="hidden"/>
         <canvas
           ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full rounded-lg"
@@ -287,6 +294,7 @@ const SquatPage = () => {
         >
           {showSkeleton ? "Hide Skeleton" : "Show Skeleton"}
         </Button>
+        {/* <Button onClick={toggleSpeaker}>{isSpeakerOn ? 'Switch to Earpiece' : 'Switch to Loudspeaker'}</Button> */}
       </div>
     </>
   );

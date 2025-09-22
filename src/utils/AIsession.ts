@@ -8,13 +8,12 @@ interface AISession {
 }
 
 export const createAISession = async (getRepHistroy: () => any[]): Promise<AISession> => {
-    const response = await axios.get('/api');
-    const tempkey = response.data.tempApiKey;
-    const agent = createTrainer(getRepHistroy);
-    const session = new RealtimeSession(agent, {
-        model: "gpt-4o-realtime-preview",
-    })
-    await session.connect({ apiKey: tempkey });
-    await session.sendMessage("Hello I am KinetixAI")
-    return session;
+  const response = await axios.get('/api');
+  const tempkey = response.data.tempApiKey;
+  const agent = createTrainer(getRepHistroy);
+  const session = new RealtimeSession(agent, {
+    model: "gpt-4o-realtime-preview",
+  })
+  await session.connect({ apiKey: tempkey });
+  return session;
 }

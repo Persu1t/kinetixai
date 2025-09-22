@@ -206,6 +206,7 @@ const Page = () => {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" },
         });
+        await navigator.mediaDevices.enumerateDevices();
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();

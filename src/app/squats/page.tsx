@@ -180,9 +180,7 @@ const SquatPage = () => {
 
       if (videoRef.current) {
         const stream = await navigator.mediaDevices.getUserMedia({video: { facingMode: "environment" }});
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        console.log(devices);
-        console.log(devices);
+        await navigator.mediaDevices.enumerateDevices();
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();

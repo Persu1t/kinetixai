@@ -21,6 +21,7 @@ const Page = () => {
   const startNoseYRef = useRef<number | null>(0);
   const smoothedNoseDispRef = useRef(0);
   const aiSessionRef = useRef(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [session, setSession] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
@@ -272,6 +273,7 @@ const Page = () => {
     <>
       <div className="relative w-full max-w-screen-md mx-auto">
         <video ref={videoRef} className="w-full h-auto rounded-lg" playsInline />
+        <audio ref={audioRef} autoPlay className="hidden"/>
         <canvas
           ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full rounded-lg"

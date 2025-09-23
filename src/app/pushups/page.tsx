@@ -12,6 +12,7 @@ const Page = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const minElbowAngleRef = useRef<number>(Infinity);
+  const minNoseDispRef = useRef<number>(Infinity);
   const elbowAngleRef = useRef<number | null>(null);
   const landmarksRef = useRef<any[]>([]); // ✅ store latest landmarks
   const lastElbowAngleRef = useRef<number | null>(null);
@@ -38,6 +39,7 @@ const Page = () => {
   const [repHistrory, setRepHistory] = useState([]);
   const minHipRef = useRef<number | null>(null);
   const maxHipRef = useRef<number | null>(null);
+  const [noseMovement, setNoseMovement] = useState(0);
 
   const repHistoryRef = useRef<any[]>([]);
 
@@ -111,7 +113,7 @@ const Page = () => {
     const DOWN_THRESHOLD = 115;      // bent elbow
     const UP_THRESHOLD = 160;       // straight arm
     const MIN_DEPTH = 95;           // must reach <= this
-    const MIN_NOSE_MOVE = 0.12;     // nose must move down ≥ 15% torso length
+    const MIN_NOSE_MOVE = 0.10;     // nose must move down ≥ 15% torso length
     const MIN_REP_INTERVAL = 400;   // ms
     const ELBOW_UI_UPDATE_MS = 100;
 
@@ -137,9 +139,9 @@ const Page = () => {
 
     // Nose displacement (normalized to torso length)
     const noseDisplacement = (noseY - startNoseYRef.current) / torsoLength;
-
     const smoothNoseDisplacement = smooth(smoothedNoseDispRef.current || noseDisplacement, noseDisplacement);
     smoothedNoseDispRef.current = smoothNoseDisplacement;
+    minNoseDispRef.current = Math.max(0, smoothNoseDisplacement);
 
 
     // --- Stage machine ---
@@ -159,7 +161,8 @@ const Page = () => {
         pushUpStageRef.current = "up";
         pushUpCountRef.current += 1;
         const minElbowAngle = minElbowAngleRef.current;
-
+        const minNoseDisplacement = minNoseDispRef.current;
+        setNoseMovement(minNoseDisplacement);
         setRepHistory(prev => [
           ...prev,
           {
@@ -167,7 +170,7 @@ const Page = () => {
             minElbowAngle,
             bodySag,
             avgElbow,
-            noseDisplacement: smoothNoseDisplacement,
+            noseDisplacement: minNoseDisplacement,
           },
         ]);
 
@@ -291,7 +294,7 @@ const Page = () => {
           <div>Stage: {pushUpStage}</div>
           <div>Elbow Angle: {Math.round(elbowAngle)}°</div>
           <div>Body Sag: {Math.round(bodySag)}°</div>
-          <div>Hip Movement: {Math.round(minHipRef.current - maxHipRef.current)}</div>
+          <div>Chest Movement: {((noseMovement)*10).toFixed(2)}%</div>
         </div>
         {aiLoading && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/70 text-white px-3 py-2 rounded-lg">

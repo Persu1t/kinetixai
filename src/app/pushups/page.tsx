@@ -30,7 +30,7 @@ const Page = () => {
   const showSkeletonRef = useRef(showSkeleton);
 
   const [aiLoading, setAiLoading] = useState(true);
-  const [cameraFacing,setCameraFacing] = useState<"user" | "environment">("environment");
+  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("environment");
 
   const [pushUpCount, setPushUpCount] = useState(0);
   const [pushUpStage, setPushUpStage] = useState<"up" | "down">("up");
@@ -187,8 +187,8 @@ const Page = () => {
     }
   };
 
-  useEffect(()=>{
-        const awakeAI = async () => {
+  useEffect(() => {
+    const awakeAI = async () => {
       setAiLoading(true);
       try {
         const aiSession = await createAISession(() => repHistoryRef.current);
@@ -200,11 +200,11 @@ const Page = () => {
 
     awakeAI();
 
-    return ()=>{
+    return () => {
       aiSessionRef.current?.close();
     }
 
-  },[])
+  }, [])
 
   useEffect(() => {
     repHistoryRef.current = repHistrory
@@ -282,19 +282,21 @@ const Page = () => {
     <>
       <div className="relative w-full max-w-screen-md mx-auto">
         <video ref={videoRef} className="w-full h-auto rounded-lg" playsInline />
-        <audio ref={audioRef} autoPlay className="hidden"/>
+        <audio ref={audioRef} autoPlay className="hidden" />
         <canvas
           ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full rounded-lg"
         />
 
         {/* Overlay UI */}
-        <div className="absolute top-2 left-2 bg-black/60 text-white text-xs sm:text-sm md:text-base p-2 sm:p-3 rounded-lg shadow-md">
-          <div>Push-ups: {pushUpCount}</div>
-          <div>Stage: {pushUpStage}</div>
-          <div>Elbow Angle: {Math.round(elbowAngle)}°</div>
-          <div>Body Sag: {Math.round(bodySag)}°</div>
-          <div>Chest Movement: {((noseMovement)*10).toFixed(2)}%</div>
+        <div className="absolute top-2 left-2 text-white text-xs sm:text-sm md:text-base p-2 sm:p-3 rounded-lg shadow-md flex justify-between w-[90%] items-center sm:flex-row">
+          <div className="text-3xl font-bold text-yellow-400 drop-shadow-lg">Push-ups: {pushUpCount}</div>
+          <div className="bg-black/60 backdrop-blur-sm p-2 rounded-md">
+            <div>Stage: {pushUpStage}</div>
+            <div>Elbow Angle: {Math.round(elbowAngle)}°</div>
+            <div>Body Sag: {Math.round(bodySag)}°</div>
+            <div>Chest Movement: {((noseMovement) * 10).toFixed(2)}%</div>
+          </div>
         </div>
         {aiLoading && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/70 text-white px-3 py-2 rounded-lg">
@@ -308,7 +310,7 @@ const Page = () => {
           </div>
         )}
       </div>
-       <div className="flex flex-wrap gap-2 mt-4 justify-center">
+      <div className="flex flex-wrap gap-2 mt-4 justify-center">
         <Button
           onClick={() => setSession(true)}
           className="flex-1 min-w-[120px] px-3 py-2 bg-green-600 text-white rounded text-sm sm:text-base"

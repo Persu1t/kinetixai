@@ -182,7 +182,7 @@ const SquatPage = () => {
       poseRef.current = await initMediapipe();
 
       if (videoRef.current) {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacing }});
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacing } });
         const devices = await navigator.mediaDevices.enumerateDevices();
         console.log(devices)
         videoRef.current.srcObject = stream;
@@ -244,12 +244,14 @@ const SquatPage = () => {
         />
 
         {/* Overlay UI */}
-        <div className="absolute top-2 left-2 bg-black/60 text-white text-xs sm:text-sm md:text-base p-2 sm:p-3 rounded-lg shadow-md">
-          <div>Squats: {squatCount}</div>
-          <div>Stage: {squatStage}</div>
-          <div>Knee Angle: {Math.round(kneeAngle)}°</div>
-          <div>Torso Angle: {Math.round(torsoAngle)}°</div>
-          <div>Hip Displacement: {hipDisplacement.toFixed(2)}</div>
+        <div className="absolute top-2 left-2 text-white text-xs sm:text-sm md:text-base p-2 sm:p-3 rounded-lg shadow-md flex justify-between w-[90%] items-center sm:flex-row">
+          <div className="text-3xl font-bold text-yellow-400 drop-shadow-lg">Squats: {squatCount}</div>
+          <div className="bg-black/60 backdrop-blur-sm p-2 rounded-md">
+            <div>Stage: {squatStage}</div>
+            <div>Knee Angle: {Math.round(kneeAngle)}°</div>
+            <div>Torso Angle: {Math.round(torsoAngle)}°</div>
+            <div>Hip Displacement: {hipDisplacement.toFixed(2)}</div>
+          </div>
         </div>
 
         {aiLoading && (
